@@ -41,6 +41,7 @@
 </head>
 
 <body>
+    <script src="data/elections.embed.js"></script>
     <script src="js/map.js"></script>
     
     <div class="topnav" >
@@ -54,11 +55,11 @@
         </select>
         <label for="election-year">Year:</label>
         <select name="election-year" id="election-year">
-            <option value="2020">2020</option>
-            <option value="2018">2018</option>
-            <option value="2016">2016</option>
-            <option value="2014">2014</option>
-        </select>
+		<option value="2020">2020</option>
+		<option value="2018">2018</option>
+		<option value="2016">2016</option>
+		<option value="2014">2014</option>
+</select>
         <input type="submit" value="Submit" onclick="get_election('US_senate_state')">
         <a href="/" class="alignright">Back</a>
     </div>
