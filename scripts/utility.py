@@ -206,4 +206,26 @@ def get_MIT_county(file, target):
                                                         years[year][county][1],years[year][county][2]))
         outfile.close()
 
-get_MIT_county("../MIT/countypres_2000-2020.csv","../elections/US_president_county")
+def main():
+    import argparse
+
+    p = argparse.ArgumentParser(description="AED scripts (MIT county ingest, etc.)")
+    p.add_argument(
+        "command",
+        nargs="?",
+        choices=("mit-county",),
+        help="mit-county — rebuild elections/US_president_county/*.txt from MIT CSV",
+    )
+    args = p.parse_args()
+    if args.command != "mit-county":
+        p.print_help()
+        return
+    root = Path(__file__).resolve().parent.parent
+    get_MIT_county(
+        str(root / "MIT/countypres_2000-2020.csv"),
+        str(root / "elections/US_president_county"),
+    )
+
+
+if __name__ == "__main__":
+    main()
