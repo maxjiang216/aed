@@ -1,0 +1,4 @@
+_PARTIES	Democratic	Republican	Independent	Total
+_COLORS	Blue	Red	Yellow
+Kentucky	470420	412653		923358
+Mississippi	601222		172762	780637

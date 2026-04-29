@@ -1,0 +1,6 @@
+_PARTIES	Democratic	Republican	Total
+_COLORS	Blue	Red
+Kentucky	464245	294034	833139
+Louisiana	288161	673239	1023163
+Mississippi	348617	544851	893468
+West Virginia	149202	141656	301084

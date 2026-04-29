@@ -1,0 +1,5 @@
+_PARTIES	Democratic	Republican	Total
+_COLORS	Blue	Red
+Hawaii	82074	86213	168662
+Kentucky	516549	336456
+Mississippi	57671

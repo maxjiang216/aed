@@ -1,0 +1,5 @@
+_PARTIES	Democratic	Republican	Total
+_COLORS	Blue	Red
+Kentucky	561674	454650	1030671
+Louisiana	1010211	593469	1609352
+Mississippi	409209	288764	742737

@@ -1,0 +1,4 @@
+_PARTIES	Democratic	Republican	Total
+_COLORS	Blue	Red
+New Jersey	1256853	928174	2227165
+Virginia	984177	887234	1886721

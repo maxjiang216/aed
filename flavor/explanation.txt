@@ -1,0 +1,27 @@
+runoff
+ - add all candidate of each party
+multiple candidates from a party otherwise
+ - choose the best performer in each category
+top 2 third party
+ - take best third party as independent
+ - in cases where one party does not run, take the main opposite as that party's candidate when appropriate
+ - in cases where candidate participated in one of the party primaries, count as that party
+   - illinois 1986 gov Adlai Stevenson III won Democratic primary and received all presumably Democratic votes
+   - hawaii 1982 gov ind dem did not run in primary, not off. affliated, ran as third party in 1994, not clear lost votes from primarily democrats
+   - virginia 1973 ind was dem, only opp to rep
+   - mississippi 1971 no republican primary, ind unknown person
+   - alabama 1970 second place is clearly affiliated with democratic party, would "caucus" in a win situation. no republican candidate
+   - 1966 tennessee governor, no republican
+   - 2018 california senate, no republican made runoff so take jungle primary totals
+ - 1966 george governor, dem second place won from contingent election, for now let map show popular vote result (more relevant to electoral analysis)
+ - senate, etc., party is who they would caucus with
+blank votes, overvotes, undervotes, invalid ballots
+ - do not include
+recall
+ - yes/no according to party
+
+add flip/hold, shift, trend
+ - add "last election" for each election
+ - auto generate "winner" for each election
+ - auto generate "flip/hold" for each election?, trend, etc.
+ - add a "last cycle" button?

@@ -1,0 +1,57 @@
+Elections:
+    Date (YYYY/MM/DD)
+    Jurisdiction
+        0 Federal
+        1 State
+        2 County
+        3 Municipal
+    Region
+    Type
+        00 Head of executive (President, Governor, Mayor, etc.)
+        01 Senate
+        02 House of Representatives
+        ... other positions
+    Special
+        0 Normal Election
+        1 Special Election
+    Breakdown
+        00 Federal (No breakdown)
+        01 State
+        02 County
+        03 Municipal
+        04 Precinct
+        05 Congressional District
+        06 State Senate District
+        07 State House District
+    Number (Single Digit)
+
+Name of Election: (Region) (Type) (Special) Election (Year) by (Breakdown)
+This doesn't have to be unique
+    
+Candidate
+    Name
+    Alternate Names
+    Party
+        Time Span
+    Offices Held
+        Time Span
+        Jurisdiction
+        Region
+        Type
+    Elections Contested
+
+Party
+    Name
+    Alternate Names
+    Abbreviation
+    Elections Contested
+
+Region
+    Name
+    Alternate Names
+    Abbreviation
+    Type (State, County, etc)
+    Container (State for counties, etc)
+    Population
+    Area
+    Demographic Breakdown
