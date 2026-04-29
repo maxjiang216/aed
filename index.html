@@ -4,38 +4,131 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AED</title>
+    <title>American Elections Database</title>
     <style>
-        body {
-            padding: 1;
-            margin: 1;
+        :root {
+            --bg: #121417;
+            --surface: #1e2228;
+            --border: #353a44;
+            --text: #e9eaec;
+            --muted: #9aa0a8;
+            --accent: #5b8fd6;
+            --accent-hover: #7aa7e0;
         }
-        table {
-          border-spacing: 0;
-          width: 100%;
-          border: 1px solid #ddd;
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--text);
+            background: radial-gradient(ellipse 120% 80% at 50% -20%, #2a3340 0%, var(--bg) 55%);
+        }
+
+        header {
+            padding: 1rem 1.25rem;
+            background: #2b2e33;
+            border-bottom: 1px solid var(--border);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: clamp(1.25rem, 4vw, 1.75rem);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        main {
+            max-width: 38rem;
+            margin: 0 auto;
+            padding: 2rem 1.25rem 3rem;
+        }
+
+        section {
+            margin-bottom: 2rem;
+        }
+
+        section h2 {
+            margin: 0 0 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        ul a {
+            display: block;
+            padding: 0.75rem 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            text-decoration: none;
+            transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+        }
+
+        ul a:hover {
+            border-color: var(--accent);
+            background: #252a32;
+            color: #fff;
+        }
+
+        ul a:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .lede {
+            margin: 0 0 2rem;
+            color: var(--muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
     </style>
-    <title>American Elections Database</title>
 </head>
 
 <body>
-    <main>
+    <header>
         <h1>American Elections Database</h1>
-        <br>
-        <h2>Maps</h2>
-        <br>
-        <a href="US_president_state.html">Presidential Margin by State</a>
-        <br>
-        <a href="US_president_county.html">Presidential Margin by County</a>
-        <br>
-        <a href="US_governor_state.html">Gubernatorial Margin by State</a>
-        <br>
-        <a href="US_senate_state.html">Senatorial Margin by State</a>
-        <br>
-        <h2>Data</h2>
-        <br>
-        <a href="elections.html">Elections table</a>
+    </header>
+    <main>
+        <p class="lede">Interactive maps and tabular results for U.S. federal and state elections.</p>
+        <section aria-labelledby="maps-heading">
+            <h2 id="maps-heading">Maps</h2>
+            <ul>
+                <li><a href="US_president_state.html">Presidential margin by state</a></li>
+                <li><a href="US_president_county.html">Presidential margin by county</a></li>
+                <li><a href="US_governor_state.html">Gubernatorial margin by state</a></li>
+                <li><a href="US_senate_state.html">Senatorial margin by state</a></li>
+            </ul>
+        </section>
+        <section aria-labelledby="data-heading">
+            <h2 id="data-heading">Data</h2>
+            <ul>
+                <li><a href="elections.html">Elections table</a></li>
+            </ul>
+        </section>
     </main>
 </body>
 
