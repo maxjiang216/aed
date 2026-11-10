@@ -27,7 +27,7 @@ def _pick_party(rows: pd.DataFrame) -> str:
 
 
 # Ballots that are not votes for anyone: excluded from candidates AND from the total.
-_NOT_A_VOTE = re.compile(r"^(BLANK|OVER ?VOTES?|UNDER ?VOTES?|VOID)", re.I)
+_NOT_A_VOTE = re.compile(r"^(BLANK|OVER ?VOTES?|UNDER ?VOTES?|VOID|EXHAUSTED BALLOTS?)", re.I)
 INVALID = "__invalid__"
 
 

@@ -152,3 +152,31 @@ describe("house districts", () => {
     expect([...redrawnBetween(meta, 2016, 2018)]).toEqual(["PA"]);
   });
 });
+
+describe("house real data", () => {
+  const meta: DistrictMeta = json("public/data/house/shapes/meta.json");
+  const albers = geoAlbersUsa().scale(1300).translate([487.5, 305]);
+  const projected = geoPath(albers);
+  const years = index.offices.house?.district ?? [];
+  it.runIf(years.length > 0)("every year: all 435 districts colored in every view; ids match the map", () => {
+    years.forEach((year, i) => {
+      const topo = json(`public/data/house/shapes/${meta.congressFile[congressFor(year)]}`);
+      const fs = (feature(topo, topo.objects.districts) as unknown as { features: { properties: { id: string } }[] }).features;
+      const shapes: Shapes = { regions: fs.map((f) => ({ id: f.properties.id, name: f.properties.id, d: projected(f as never) ?? "" })), borders: "", outline: "" };
+      const prevYear = i ? years[i - 1] : null;
+      const local: LocalData = {
+        cur: json(`public/data/house/${year}.json`),
+        prev: prevYear ? json(`public/data/house/${prevYear}.json`) : null,
+        prevYear,
+        redrawn: prevYear ? redrawnBetween(meta, prevYear, year) : undefined,
+      };
+      const missing = shapes.regions.map((r) => r.id).filter((id) => !local.cur[id]);
+      expect(missing, `${year} districts without results`).toEqual([]);
+      for (const view of VIEWS) {
+        const m = buildModel({ office: "house", level: "district", year, view, seat: "regular" }, null, [], local, shapes)!;
+        expect(Object.keys(m.fills).length, `${year} ${view}`).toBe(435);
+        for (const f of Object.values(m.fills)) expect(okColor(f)).toBe(true);
+      }
+    });
+  });
+});

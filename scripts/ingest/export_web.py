@@ -152,6 +152,8 @@ def house_districts() -> list[int]:
                     race["r"] = 1
                 if r.get("unopposed"):
                     race["u"] = 1
+                if r.get("notes"):
+                    race["n"] = r["notes"]
                 race["src"] = "medsl"
                 res.setdefault(did, []).append(race)
         (out_dir / f"{year}.json").write_text(json.dumps(res, separators=(",", ":"), ensure_ascii=False),
