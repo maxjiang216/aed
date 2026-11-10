@@ -1,4 +1,4 @@
-import type { CountyFile, DataIndex, Office, StatewideFile } from "./types";
+import type { CountyFile, DataIndex, HouseFile, Office, StatewideFile } from "./types";
 
 const cache = new Map<string, Promise<unknown>>();
 
@@ -20,3 +20,4 @@ export const loadIndex = () => getJson<DataIndex>("index.json");
 export const loadStatewide = (office: Office) => getJson<StatewideFile>(`statewide/${office}.json`);
 export const loadCounties = (office: Office, year: number) =>
   getJson<CountyFile>(`county/${office}/${year}.json`);
+export const loadHouse = (year: number) => getJson<HouseFile>(`house/${year}.json`);

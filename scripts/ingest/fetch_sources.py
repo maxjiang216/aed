@@ -28,16 +28,44 @@ FILES = {
 }
 
 
+# Congressional district shapes: Lewis et al. (UCLA) for the 95th-114th Congress,
+# Census cartographic boundaries after that. Used by build_district_shapes.mjs.
+DISTRICT_URLS = {
+    **{f"districts{c:03d}.zip": f"https://cdmaps.polisci.ucla.edu/shp/districts{c:03d}.zip" for c in range(95, 115)},
+    **{f"cb_{y}_us_cd{c}_500k.zip": f"https://www2.census.gov/geo/tiger/GENZ{y}/shp/cb_{y}_us_cd{c}_500k.zip"
+       for y, c in [(2017, 115), (2018, 116), (2022, 118), (2024, 119)]},
+}
+
+# Behind a Dataverse guestbook form: download by hand from the DOI page.
+MANUAL = {
+    "medsl_house_1976_2024.csv": "U.S. House 1976-2024, doi:10.7910/DVN/IG0UN2",
+    "medsl_countypres_2000_2024.csv": "County Presidential Returns 2000-2024, doi:10.7910/DVN/VOQCHQ (optional)",
+}
+
+
+def _get(url: str, dest: Path) -> None:
+    req = urllib.request.Request(url, headers={"User-Agent": "aed-data-build/0.1"})
+    dest.write_bytes(urllib.request.urlopen(req, timeout=900).read())
+
+
 def main() -> None:
     RAW.mkdir(exist_ok=True)
+    (RAW / "districts").mkdir(exist_ok=True)
+    for name, url in DISTRICT_URLS.items():
+        dest = RAW / "districts" / name
+        if not (dest.exists() and dest.stat().st_size > 0):
+            print(f"get  districts/{name}")
+            _get(url, dest)
     for name, fid in FILES.items():
         dest = RAW / name
         if dest.exists() and dest.stat().st_size > 0:
             print(f"have {name}")
             continue
         print(f"get  {name}")
-        req = urllib.request.Request(DATAVERSE.format(id=fid), headers={"User-Agent": "aed-data-build/0.1"})
-        dest.write_bytes(urllib.request.urlopen(req, timeout=300).read())
+        _get(DATAVERSE.format(id=fid), dest)
+    for name, what in MANUAL.items():
+        if not (RAW / name).exists():
+            print(f"MANUAL raw/{name}: {what}")
 
 
 if __name__ == "__main__":

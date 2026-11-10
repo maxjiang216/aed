@@ -10,10 +10,11 @@ export interface Race {
   k?: string; // Senate class
   n?: string[]; // data notes
   src?: string;
+  u?: 1; // unopposed, no vote count reported
 }
 
-export type Office = "president" | "senate" | "governor";
-export type Level = "state" | "county";
+export type Office = "president" | "senate" | "governor" | "house";
+export type Level = "state" | "county" | "district";
 export type View = "result" | "bias" | "flip" | "shift" | "trend";
 export type SenateSeat = "regular" | "special";
 
@@ -21,6 +22,8 @@ export type SenateSeat = "regular" | "special";
 export type StatewideFile = Record<string, Record<string, Race[]>>;
 /** 5-digit FIPS -> race */
 export type CountyFile = Record<string, Race>;
+/** district id ("CA-12", "WY-AL") -> races that year (regular, special, runoff) */
+export type HouseFile = Record<string, Race[]>;
 
 export interface DataIndex {
   offices: Record<Office, Partial<Record<Level, number[]>>>;

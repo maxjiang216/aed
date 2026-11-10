@@ -57,11 +57,12 @@ interface PanelProps {
   office: Office;
   hues: Record<string, Hue>;
   prev: { race: Race; year: number } | null;
+  note?: string | null;
   pinned: boolean;
   onClose: () => void;
 }
 
-export function RacePanel({ title, races, year, office, hues, prev, pinned, onClose }: PanelProps) {
+export function RacePanel({ title, races, year, office, hues, prev, note, pinned, onClose }: PanelProps) {
   return (
     <div className="race-panel">
       <div className="panel-head">
@@ -91,6 +92,7 @@ export function RacePanel({ title, races, year, office, hues, prev, pinned, onCl
                 )}
               </p>
             )}
+            {race.u ? <p className="muted">Unopposed; no vote count reported.</p> : null}
             <CandidateTable race={race} hues={hues} />
             {race.n?.map((n, j) => (
               <p key={j} className="note">
@@ -102,6 +104,7 @@ export function RacePanel({ title, races, year, office, hues, prev, pinned, onCl
         );
       })}
       {prev && races.length > 0 && <PrevLine prev={prev} />}
+      {note && <p className="note">{note}</p>}
       {!pinned && <p className="hint muted">Click a region to pin it.</p>}
     </div>
   );
@@ -163,17 +166,24 @@ export function NationalPanel({
 
   const dm = env.t > 0 ? (env.d - env.r) / env.t : null;
   const isPres = sel.office === "president";
+  const isHouse = sel.office === "house";
+  const byParty = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of races) for (const row of r.c) if (row[3] !== 1) m.set(row[1], (m.get(row[1]) ?? 0) + row[2]);
+    return [...m].sort((a, b) => b[1] - a[1]).map(([p, v]) => [p, p, v, 0] as Row);
+  }, [races]);
   const top = summary.rows.slice(0, isPres ? 6 : 4);
   return (
     <div className="race-panel">
       <h2>
-        {sel.year} {isPres ? "presidential election" : sel.office === "senate" ? "Senate elections" : "governor elections"}
+        {sel.year}{" "}
+        {isPres ? "presidential election" : isHouse ? "House elections" : sel.office === "senate" ? "Senate elections" : "governor elections"}
       </h2>
       <p className="muted">
-        {races.length} {races.length === 1 ? "state" : "states"} with a race on the map.
+        {races.length} {isHouse ? "districts" : races.length === 1 ? "state" : "states"} with a race on the map.
         {dm !== null && ` Combined: ${dm >= 0 ? "D" : "R"}+${Math.abs(dm * 100).toFixed(1)}.`}
       </p>
-      <h3>States won</h3>
+      <h3>{isHouse ? "Seats won" : "States won"}</h3>
       <ul className="wins">
         {Object.entries(summary.wins)
           .sort((a, b) => b[1] - a[1])
@@ -190,8 +200,15 @@ export function NationalPanel({
           <CandidateTable race={{ c: top, t: env.t }} hues={hues} />
         </>
       )}
+      {isHouse && (
+        <>
+          <h3>Popular vote by party</h3>
+          <CandidateTable race={{ c: byParty.slice(0, 5), t: env.t }} hues={hues} />
+          <p className="hint muted">Unopposed races without a reported count add no votes.</p>
+        </>
+      )}
       {dm === null && <p className="muted">No data.</p>}
-      <p className="hint muted">Hover or click a state for details. ← → change year.</p>
+      <p className="hint muted">Hover or click a {isHouse ? "district" : "state"} for details. ← → change year.</p>
     </div>
   );
 }

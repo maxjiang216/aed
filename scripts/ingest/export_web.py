@@ -9,7 +9,10 @@ race = {"c": [[name, party, votes, flag], ...], "t": total, ...}
   flag 0 = named candidate
        1 = unnamed bloc that may be one real contender (source only names D and R)
        2 = several minor candidates / scattered write-ins folded together; never a contender
-  optional: "s": 1 special, "r": 1 runoff, "k": "I"|"II"|"III" Senate class, "n": [notes], "src"
+  public/data/house/<year>.json               {"CA-12": [race, ...]}   (needs manual MEDSL download)
+  public/data/house/shapes/<congress>.json   district TopoJSON (scripts/ingest/build_district_shapes.mjs)
+
+  optional: "s": 1 special, "r": 1 runoff, "u": 1 unopposed (no count reported), "k": "I"|"II"|"III" Senate class, "n": [notes], "src"
 """
 
 from __future__ import annotations
@@ -128,14 +131,45 @@ def county_president() -> list[int]:
     return sorted(years)
 
 
+def house_districts() -> list[int]:
+    """public/data/house/<year>.json: {"CA-12": [race, ...]}. Skipped if the MEDSL file is absent."""
+    import house
+
+    if house.source_file() is None:
+        print("skip House: raw/medsl_house_1976_2024.csv not downloaded (see scripts/ingest/house.py)")
+        return []
+    out_dir = OUT / "house"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    years = []
+    for year, districts in sorted(house.races().items()):
+        res: dict[str, list[dict]] = {}
+        for did, rs in districts.items():
+            for r in rs:
+                race = compact(r["candidates"], r["total"], keep=4)
+                if r.get("special"):
+                    race["s"] = 1
+                if r.get("stage") == "runoff":
+                    race["r"] = 1
+                if r.get("unopposed"):
+                    race["u"] = 1
+                race["src"] = "medsl"
+                res.setdefault(did, []).append(race)
+        (out_dir / f"{year}.json").write_text(json.dumps(res, separators=(",", ":"), ensure_ascii=False),
+                                              encoding="utf-8")
+        years.append(year)
+    return years
+
+
 def main() -> None:
     sw = statewide()
     county = county_president()
+    house_years = house_districts()
     index = {
         "offices": {
             "president": {"state": sw.get("president", []), "county": county},
             "senate": {"state": sw.get("senate", [])},
             "governor": {"state": sw.get("governor", [])},
+            **({"house": {"district": house_years}} if house_years else {}),
         },
         "sources": json.loads((REPO_ROOT / "data" / "statewide.json").read_text())["sources"],
     }

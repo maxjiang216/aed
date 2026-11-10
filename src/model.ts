@@ -16,6 +16,7 @@ export interface Outcome {
 export function outcome(race: Race): Outcome | null {
   const c = contenders(race);
   if (!c.length || !(race.t > 0)) return null;
+  if (race.u) return { winner: c[0], second: null, margin: 1, tie: false };
   const second = c[1] ?? null;
   const diff = c[0][2] - (second ? second[2] : 0);
   return { winner: c[0], second, margin: diff / race.t, tie: diff === 0 };
@@ -27,6 +28,7 @@ export function partyVotes(race: Race, party: string): number {
 
 /** (D - R) / total */
 export function demMargin(race: Race): number | null {
+  if (race.u) return null; // unopposed: no vote count to compare
   return race.t > 0 ? (partyVotes(race, "Democratic") - partyVotes(race, "Republican")) / race.t : null;
 }
 

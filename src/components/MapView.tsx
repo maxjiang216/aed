@@ -1,4 +1,3 @@
-import { geoPath } from "d3-geo";
 import { memo, useMemo, useRef } from "react";
 import { HEIGHT, WIDTH, type Shapes } from "../geo";
 
@@ -8,8 +7,6 @@ export interface Hover {
   y: number;
 }
 
-const path = geoPath();
-
 interface Props {
   shapes: Shapes;
   fills: Record<string, string>;
@@ -18,13 +15,11 @@ interface Props {
   onSelect: (id: string) => void;
 }
 
-/** Path strings only depend on the shapes, so compute them once per level. */
 const Regions = memo(function Regions({ shapes, fills }: { shapes: Shapes; fills: Record<string, string> }) {
-  const ds = useMemo(() => shapes.regions.map((s) => [s.id, path(s) ?? ""] as const), [shapes]);
   return (
     <g className="regions">
-      {ds.map(([id, d]) => (
-        <path key={id} data-id={id} d={d} fill={fills[id] ?? "var(--no-data)"} />
+      {shapes.regions.map((r) => (
+        <path key={r.id} data-id={r.id} d={r.d} fill={fills[r.id] ?? "var(--no-data)"} />
       ))}
     </g>
   );
@@ -32,13 +27,10 @@ const Regions = memo(function Regions({ shapes, fills }: { shapes: Shapes; fills
 
 export function MapView({ shapes, fills, selected, onHover, onSelect }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const borders = useMemo(() => path(shapes.borders) ?? "", [shapes]);
-  const outline = useMemo(() => path(shapes.outline) ?? "", [shapes]);
-  const selectedD = useMemo(() => {
-    const s = selected && shapes.regions.find((r) => r.id === selected);
-    return s ? path(s) ?? "" : "";
-  }, [selected, shapes]);
-
+  const selectedD = useMemo(
+    () => (selected ? shapes.regions.find((r) => r.id === selected)?.d ?? "" : ""),
+    [selected, shapes],
+  );
   const idAt = (e: React.MouseEvent) => (e.target as Element).getAttribute?.("data-id");
 
   return (
@@ -59,8 +51,8 @@ export function MapView({ shapes, fills, selected, onHover, onSelect }: Props) {
     >
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="Map of results">
         <Regions shapes={shapes} fills={fills} />
-        <path className="borders" d={borders} />
-        <path className="outline" d={outline} />
+        <path className="borders" d={shapes.borders} />
+        <path className="outline" d={shapes.outline} />
         {selectedD && <path className="selected" d={selectedD} />}
       </svg>
     </div>

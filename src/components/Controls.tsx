@@ -1,6 +1,8 @@
 import type { DataIndex, Level, Office, Selection, View } from "../types";
 
-const OFFICE_LABEL: Record<Office, string> = { president: "President", senate: "Senate", governor: "Governor" };
+const OFFICE_LABEL: Record<Office, string> = {
+  president: "President", senate: "Senate", governor: "Governor", house: "House",
+};
 const VIEW_LABEL: Record<View, [string, string]> = {
   result: ["Result", "Winner, shaded by margin over the runner-up"],
   bias: ["Lean", "Republican-minus-Democratic margin compared with the national result that year"],
@@ -46,14 +48,14 @@ export function Controls({ index, sel, years, hasSpecial, onChange }: Props) {
       <Segmented
         label="Office"
         value={sel.office}
-        options={(Object.keys(OFFICE_LABEL) as Office[]).map((o) => [o, OFFICE_LABEL[o]])}
+        options={(Object.keys(OFFICE_LABEL) as Office[]).filter((o) => o in index.offices).map((o) => [o, OFFICE_LABEL[o]])}
         onChange={(office) => onChange({ office })}
       />
       {levels.length > 1 && (
         <Segmented
           label="Level"
           value={sel.level}
-          options={levels.map((l) => [l, l === "state" ? "States" : "Counties"])}
+          options={levels.map((l) => [l, l === "state" ? "States" : l === "county" ? "Counties" : "Districts"])}
           onChange={(level) => onChange({ level })}
         />
       )}

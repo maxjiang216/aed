@@ -1,24 +1,27 @@
 import { readFileSync } from "node:fs";
 import { renderToString } from "react-dom/server";
+import { geoAlbersUsa, geoBounds, geoPath } from "d3-geo";
 import { feature, mesh } from "topojson-client";
 import { describe, expect, it } from "vitest";
-import { buildModel } from "./App";
+import { buildModel, redrawnBetween, regionName, type LocalData } from "./App";
 import { Legend } from "./components/Legend";
 import { MapView } from "./components/MapView";
 import { NationalPanel, RacePanel } from "./components/RacePanel";
-import type { Shapes, Shape } from "./geo";
-import type { CountyFile, DataIndex, Office, StatewideFile, View } from "./types";
+import { congressFor, type DistrictMeta, type Shapes } from "./geo";
+import type { CountyFile, DataIndex, HouseFile, Office, Race, StatewideFile, View } from "./types";
 
 const json = (p: string) => JSON.parse(readFileSync(p, "utf8"));
 const index: DataIndex = json("public/data/index.json");
 
+const planar = geoPath();
 function shapes(level: "state" | "county"): Shapes {
   const topo = json(`node_modules/us-atlas/${level === "state" ? "states" : "counties"}-albers-10m.json`);
   const obj = level === "county" ? topo.objects.counties : topo.objects.states;
+  const fs = (feature(topo, obj) as unknown as { features: { id: string; properties: { name: string } }[] }).features;
   return {
-    regions: (feature(topo, obj) as unknown as { features: Shape[] }).features.map((f) => ({ ...f, id: String(f.id) })),
-    borders: mesh(topo, topo.objects.states, (a, b) => a !== b),
-    outline: mesh(topo, topo.objects.nation),
+    regions: fs.map((f) => ({ id: String(f.id), name: f.properties.name, d: planar(f as never) ?? "" })),
+    borders: planar(mesh(topo, topo.objects.states, (a, b) => a !== b)) ?? "",
+    outline: planar(mesh(topo, topo.objects.nation)) ?? "",
   };
 }
 const STATE = shapes("state");
@@ -38,7 +41,7 @@ describe.each(["president", "senate", "governor"] as Office[])("%s statewide", (
         for (const f of fills) expect(okColor(f), `${office} ${year} ${view} ${f}`).toBe(true);
       }
       const m = buildModel({ office, level: "state", year, view: "result", seat: "regular" }, data, years, null, STATE)!;
-      renderToString(<NationalPanel sel={{ office, level: "state", year, view: "result", seat: "regular" }} races={m.stateRaces} hues={m.hues} env={m.env} />);
+      renderToString(<NationalPanel sel={{ office, level: "state", year, view: "result", seat: "regular" }} races={m.allRaces} hues={m.hues} env={m.env} />);
       for (const id of Object.keys(m.fills)) {
         renderToString(<RacePanel title={id} races={m.racesFor(id)} year={year} office={office} hues={m.hues} prev={m.prevFor(id)} pinned onClose={() => {}} />);
       }
@@ -76,12 +79,76 @@ describe("county", () => {
     years.forEach((year, i) => {
       const cur: CountyFile = json(`public/data/county/president/${year}.json`);
       const prev: CountyFile | null = i ? json(`public/data/county/president/${years[i - 1]}.json`) : null;
+      const wrap = (f: CountyFile) => Object.fromEntries(Object.entries(f).map(([k, r]) => [k, [r]]));
+      const local: LocalData = { cur: wrap(cur), prev: prev && wrap(prev), prevYear: i ? years[i - 1] : null };
       for (const view of VIEWS) {
-        const mm = buildModel({ office: "president", level: "county", year, view, seat: "regular" }, pres, index.offices.president.state!, [cur, prev], COUNTY)!;
+        const mm = buildModel({ office: "president", level: "county", year, view, seat: "regular" }, pres, index.offices.president.state!, local, COUNTY)!;
         const n = Object.keys(mm.fills).length;
         expect(n, `${year} ${view}`).toBeGreaterThan(3000);
         for (const f of Object.values(mm.fills)) expect(okColor(f)).toBe(true);
       }
     });
+  });
+});
+
+describe("house districts", () => {
+  const meta: DistrictMeta = json("public/data/house/shapes/meta.json");
+  const albers = geoAlbersUsa().scale(1300).translate([487.5, 305]);
+  const projected = geoPath(albers);
+  const districtShapes = (c: number): Shapes => {
+    const topo = json(`public/data/house/shapes/${meta.congressFile[c]}`);
+    const fs = (feature(topo, topo.objects.districts) as unknown as { features: { properties: { id: string } }[] }).features;
+    return { regions: fs.map((f) => ({ id: f.properties.id, name: f.properties.id, d: projected(f as never) ?? "" })), borders: "", outline: "" };
+  };
+  /** Fake results: party by district number parity, margin from the number. */
+  const fake = (ids: string[], seed: number): HouseFile =>
+    Object.fromEntries(ids.map((id, i) => {
+      const dem = (i + seed) % 2 === 0;
+      const w = 50 + ((i * 7 + seed) % 30);
+      const race: Race = { c: [["W", dem ? "Democratic" : "Republican", w, 0], ["L", dem ? "Republican" : "Democratic", 100 - w, 0]], t: 100 };
+      return [id, i % 50 === 0 ? [{ c: [["U", "Democratic", 1, 0]], t: 1, u: 1 }] : [race]];
+    }));
+
+  it("every Congress 95-119 has 435 districts that project inside the map", () => {
+    for (let c = 95; c <= 119; c++) {
+      const s = districtShapes(c);
+      expect(s.regions.length, `congress ${c}`).toBe(435);
+      for (const r of s.regions) expect(r.d.length, r.id).toBeGreaterThan(10);
+    }
+  });
+
+  it("district outlines line up with the us-atlas state shapes", () => {
+    // Bounding box of all projected districts vs the pre-projected states.
+    const topo = json(`public/data/house/shapes/${meta.congressFile[119]}`);
+    const box = projected.bounds(feature(topo, topo.objects.districts) as never);
+    const st = json("node_modules/us-atlas/states-albers-10m.json");
+    const sbox = planar.bounds(feature(st, st.objects.states) as never);
+    for (let k = 0; k < 2; k++) for (let j = 0; j < 2; j++) expect(Math.abs(box[k][j] - sbox[k][j])).toBeLessThan(6);
+    expect(geoBounds(feature(topo, topo.objects.districts) as never)[0][1]).toBeGreaterThan(17);
+  });
+
+  it("builds a district model for every view, greys out redrawn states", () => {
+    const shapes = districtShapes(congressFor(2022));
+    const ids = shapes.regions.map((r) => r.id);
+    const local: LocalData = {
+      cur: fake(ids, 0), prev: fake(ids, 1), prevYear: 2020, redrawn: redrawnBetween(meta, 2020, 2022),
+    };
+    expect(local.redrawn!.has("TX")).toBe(true);
+    for (const view of VIEWS) {
+      const m = buildModel({ office: "house", level: "district", year: 2022, view, seat: "regular" }, null, [], local, shapes)!;
+      expect(Object.keys(m.fills).length).toBe(435);
+      for (const f of Object.values(m.fills)) expect(okColor(f)).toBe(true);
+      if (view === "flip") expect(m.prevFor("TX-02")).toBeNull();
+    }
+    const m = buildModel({ office: "house", level: "district", year: 2022, view: "result", seat: "regular" }, null, [], local, shapes)!;
+    expect(m.noteFor("TX-02")).toMatch(/changed/);
+    renderToString(<NationalPanel sel={{ office: "house", level: "district", year: 2022, view: "result", seat: "regular" }} races={m.allRaces} hues={m.hues} env={m.env} />);
+    renderToString(<RacePanel title={regionName("WY-AL", null)} races={m.racesFor(ids[0])} year={2022} office="house" hues={m.hues} prev={null} note={m.noteFor("TX-02")} pinned onClose={() => {}} />);
+    expect(regionName("CA-12", null)).toBe("California's 12th");
+    expect(regionName("WY-AL", null)).toBe("Wyoming at-large");
+  });
+
+  it("2018 only flags Pennsylvania as redrawn", () => {
+    expect([...redrawnBetween(meta, 2016, 2018)]).toEqual(["PA"]);
   });
 });
