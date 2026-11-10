@@ -2,3 +2,12 @@
 .vercel
 *.swp
 *~
+
+# data ingest
+raw/
+.venv/
+__pycache__/
+runs/
+node_modules/
+dist/
+*.tsbuildinfo

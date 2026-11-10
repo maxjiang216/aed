@@ -1,4 +1,6 @@
-# Build map data (writes data/elections.json and data/elections.embed.js). Run from repo root.
-.PHONY: maps
-maps:
-	python3 scripts/build_maps.py
+# Rebuild data from raw sources (needs .venv: python3 -m venv .venv && .venv/bin/pip install -r scripts/ingest/requirements.txt).
+.PHONY: data
+data:
+	.venv/bin/python scripts/ingest/fetch_sources.py
+	.venv/bin/python scripts/ingest/build_statewide.py
+	.venv/bin/python scripts/ingest/export_web.py
