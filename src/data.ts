@@ -1,4 +1,5 @@
 import type { CountyFile, DataIndex, HouseFile, Office, StatewideFile } from "./types";
+import type { SeatsFile } from "./seats";
 
 const cache = new Map<string, Promise<unknown>>();
 
@@ -22,3 +23,4 @@ export const loadCounties = (office: Office, year: number) =>
   getJson<CountyFile>(`county/${office}/${year}.json`);
 export const loadHouse = (year: number) => getJson<HouseFile>(`house/${year}.json`);
 export const loadCanada = (year: number) => getJson<HouseFile>(`canada/${year}.json`);
+export const loadSeats = () => getJson<SeatsFile>("congress/seats.json");

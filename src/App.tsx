@@ -165,7 +165,7 @@ export default function App() {
       <header className="top">
         <h1>American Elections Database</h1>
         <p className="lede">U.S. election results, 1828–present. Margin = (1st − 2nd) ÷ all votes cast.{" "}
-          <a href="#/germany">What if the House used Germany's rules?</a>
+          <a href="#/germany">What if the House used Germany's rules?</a> · <a href="#/congress">Party control of Congress over time</a>
         </p>
       </header>
       {index.value && (
