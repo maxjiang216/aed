@@ -146,3 +146,18 @@ segment arrays for all vertices). HI: no valid plan. summary() crashed on HI (fi
   => at an R-leaning environment compact maps favour R by ~6 seats (matches swing curve crossing
   near -1 pt). Enacted+shifted pres underestimates actual D by 13 (incumbency, ticket splitting,
   2020->2024 shifts not uniform).
+
+### Swing models (swing_models.py -> output/swing_models/)
+Data: MEDSL state pres 1976-2024, MIT county pres 2000-2020 + tonmcg 2024 county (AK, CT dropped),
+MEDSL House 1976-2024 (same-lines pairs, D-vs-R contested both years).
+- Model differences tiny vs local noise: mean RMSE state 2.61/2.61/2.61, county 3.35/3.39/3.33,
+  House 6.95/6.83/6.94 (uniform/flip/logit). Idiosyncratic/regional swing dominates (2012->16 counties 5.4).
+- Slope of swing on lean: positive in 2008-2016 (polarizing/sorting), negative 2016-2024; 2020->24
+  counties -0.044 vs flip prediction -0.047 (fits). House slopes strongly negative, flip wins 15/19 —
+  partly regression to the mean (candidate noise in s0), not pure flipping.
+- Battleground: no consistent effect for states; close House districts swing ~0.6 pt LESS than model
+  (13/19 cycles negative) — consistent with investment/incumbency in marginals.
+- 2020->24 counties: 58% (vote-weighted) D down & R up; mean dD -3.9%, dR +2.0% of 2020 total ->
+  switching-like plus D drop-off.
+- Seats at 2024 House PV (equal-weight fit): uniform min-border 195D vs enacted 199D; flip 194 vs 199;
+  logit 191 vs 194 -> gap 3-5 seats R-favouring, robust to model.
