@@ -1,0 +1,12 @@
+# Python / build
+.venv/
+__pycache__/
+*.pyc
+districting/_refine*.so
+
+# Downloaded Census data and caches (reproducible: python -m districting.cli <ST>)
+data/
+
+# Generated results and run logs
+output/
+runs/
