@@ -39,13 +39,22 @@ def plan_metrics(g: BlockGraph, blocks: gpd.GeoDataFrame, assign: np.ndarray, k:
 
 
 def enacted_assignment(blocks: gpd.GeoDataFrame, cds: gpd.GeoDataFrame) -> np.ndarray:
-    pts = gpd.GeoDataFrame(geometry=blocks.geometry.representative_point(), crs=blocks.crs)
-    cds = cds.to_crs(blocks.crs)
+    """Block -> enacted district index (into the sorted district codes).
+
+    'ZZ' polygons (water with no district, e.g. parts of the Great Lakes / Long Island
+    Sound) are dropped; blocks not inside any district get the nearest one."""
     cd_field = [c for c in cds.columns if c.startswith("CD") and c.endswith("FP")][0]
+    cds = cds[cds[cd_field] != "ZZ"].to_crs(EQUAL_AREA_CRS)
+    pts = gpd.GeoDataFrame(geometry=blocks.geometry.representative_point(), crs=blocks.crs).to_crs(EQUAL_AREA_CRS)
     j = gpd.sjoin(pts, cds[[cd_field, "geometry"]], how="left", predicate="within")
     j = j[~j.index.duplicated()]
-    codes = j[cd_field].ffill().to_numpy()
-    _, assign = np.unique(codes, return_inverse=True)
+    codes = j[cd_field].to_numpy(dtype=object)
+    miss = pd.isna(codes)
+    if miss.any():
+        near = gpd.sjoin_nearest(pts[miss], cds[[cd_field, "geometry"]], how="left")
+        near = near[~near.index.duplicated()]
+        codes[miss] = near[cd_field].to_numpy(dtype=object)
+    _, assign = np.unique(codes.astype(str), return_inverse=True)
     return assign.astype(np.int64)
 
 

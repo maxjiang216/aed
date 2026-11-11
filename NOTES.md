@@ -133,3 +133,11 @@ segment arrays for all vertices). HI: no valid plan. summary() crashed on HI (fi
 - compare_maps.py: 1920x1080 images (user's laptop), grid chosen per state aspect,
   compare_<ST>_{precinct,districts}.png in output/homog_sweep/.
 - Next idea: put votes into the initial partition (coarse graph weights / multi-constraint METIS).
+| lean-map-1 | `python -m districting.national_lean` | output/national/national_lean_vs_2024.png: min-border projected vs enacted actual 2024 House (aed colors) |
+| fix-zz | rerun CT,IL,NH after dropping 'ZZ' water polygons in enacted_assignment (were counted as an extra district -> inflated enacted border) + re-project + lean map | |
+- 'ZZ' fix: CT/IL/NH CD119 files have 'ZZ' water polygons; enacted_assignment treated them as a
+  district (inflated enacted border: CT 733->572 km, NH 481->453, IL 4651->4700). Now dropped,
+  unmatched blocks -> nearest district. Seats unchanged.
+- national_lean.py -> output/national/national_lean_vs_2024.png (1920x1080): left min-border projected
+  (228D-207R), right enacted + actual 2024 House (MEDSL via projects/aed/raw, 215D-220R excl. DC),
+  aed 4-stop margin colors.
