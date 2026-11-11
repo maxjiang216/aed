@@ -19,7 +19,7 @@ interface Props {
   onChange: (patch: Partial<Selection>) => void;
 }
 
-function Segmented<T extends string>({
+export function Segmented<T extends string>({
   label, value, options, onChange,
 }: { label: string; value: T; options: [T, string, string?][]; onChange: (v: T) => void }) {
   return (

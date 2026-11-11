@@ -131,3 +131,32 @@ a { color: var(--accent); }
 .error { color: #c0392b; }
 
 .foot { margin-top: 20px; font-size: 0.78rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 10px; }
+
+/* Bundestag-rules page */
+.small { font-size: 0.82rem; }
+.opt { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; }
+.opt input[type="number"] {
+  font: inherit; width: 5.5em; padding: 4px 6px; color: var(--text); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 6px; font-variant-numeric: tabular-nums;
+}
+.germany-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 16px; align-items: start; }
+.germany-grid .wide { grid-column: 1 / -1; }
+@media (max-width: 900px) { .germany-grid { grid-template-columns: 1fr; } }
+.seatbar { margin: 10px 0; }
+.seatbar-label { display: flex; justify-content: space-between; gap: 8px; font-size: 0.85rem; margin-bottom: 3px; }
+.seatbar-track { position: relative; display: flex; gap: 2px; height: 22px; }
+.seatbar-track i { display: block; min-width: 0; }
+.seatbar-track i:first-child { border-radius: 4px 0 0 4px; }
+.seatbar-track i:last-of-type { border-radius: 0 4px 4px 0; }
+.seatbar-mid { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--text); }
+.lost { margin: 0; padding: 0; list-style: none; }
+.lost li { padding: 2px 0; }
+.years tr { cursor: pointer; }
+.years tr.picked td { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.tag { display: inline-block; min-width: 2.4em; text-align: center; font-size: 0.72rem; border: 1px solid var(--border); border-radius: 4px; padding: 0 3px; color: var(--muted); }
+.tag.changed { border-color: var(--accent); color: var(--text); font-weight: 600; }
+.state-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+.state-cell { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 6px; padding: 4px 7px; }
+.coal-member { margin-right: 8px; white-space: nowrap; }
+.years td.small { line-height: 1.35; }
+.state-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }

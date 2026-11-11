@@ -2,7 +2,7 @@
  *  interpolation between them; carried over from the original AED "rule 2" scale. */
 
 export type RGB = [number, number, number];
-export type Hue = "Blue" | "Red" | "Yellow" | "Green" | "Purple" | "Orange" | "Gray";
+export type Hue = "Blue" | "Red" | "Yellow" | "Green" | "Purple" | "Orange" | "Teal" | "Gray";
 
 export const CUTOFFS = [0.05, 0.1, 0.2]; // margin where lean, likely, solid colors are reached
 
@@ -13,6 +13,7 @@ export const PALETTES: Record<Hue, RGB[]> = {
   Green: [[122, 153, 126], [138, 255, 151], [80, 200, 94], [28, 140, 40]],
   Purple: [[178, 146, 154], [187, 157, 204], [171, 106, 153], [110, 46, 91]],
   Orange: [[190, 150, 120], [255, 190, 130], [240, 140, 60], [190, 90, 20]],
+  Teal: [[130, 160, 165], [140, 215, 225], [60, 170, 190], [0, 120, 140]],
   Gray: [[150, 150, 150], [175, 175, 175], [130, 130, 130], [85, 85, 85]],
 };
 

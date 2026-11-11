@@ -21,3 +21,4 @@ export const loadStatewide = (office: Office) => getJson<StatewideFile>(`statewi
 export const loadCounties = (office: Office, year: number) =>
   getJson<CountyFile>(`county/${office}/${year}.json`);
 export const loadHouse = (year: number) => getJson<HouseFile>(`house/${year}.json`);
+export const loadCanada = (year: number) => getJson<HouseFile>(`canada/${year}.json`);

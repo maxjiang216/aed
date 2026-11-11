@@ -11,6 +11,7 @@ export interface Race {
   n?: string[]; // data notes
   src?: string;
   u?: 1; // unopposed, no vote count reported
+  nm?: string; // district name (Canadian ridings)
 }
 
 export type Office = "president" | "senate" | "governor" | "house";

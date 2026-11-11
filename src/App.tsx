@@ -164,7 +164,9 @@ export default function App() {
     <div className="app">
       <header className="top">
         <h1>American Elections Database</h1>
-        <p className="lede">U.S. election results, 1828–present. Margin = (1st − 2nd) ÷ all votes cast.</p>
+        <p className="lede">U.S. election results, 1828–present. Margin = (1st − 2nd) ÷ all votes cast.{" "}
+          <a href="#/germany">What if the House used Germany's rules?</a>
+        </p>
       </header>
       {index.value && (
         <Controls
