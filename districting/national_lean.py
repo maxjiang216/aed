@@ -89,6 +89,44 @@ def house_2024() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+# ---- uniform swing: 2020 presidential -> 2024 House popular vote ----
+PRES_SRC = Path.home() / "projects" / "aed" / "MIT" / "countypres_2000-2020.csv"
+AT_LARGE_ALL = ["AK", "DE", "ND", "SD", "VT", "WY"]
+
+
+def pres2020_by_state() -> pd.DataFrame:
+    c = pd.read_csv(PRES_SRC, low_memory=False)
+    c = c[(c.year == 2020) & c.party.isin(["DEMOCRAT", "REPUBLICAN"])]
+    return c.pivot_table(index="state_po", columns="party", values="candidatevotes", aggfunc="sum")
+
+
+def national_shift(house: pd.DataFrame | None = None) -> tuple[float, float, float]:
+    """(shift, pres2020_D, house2024_D): two-party D shares; shift = house - pres."""
+    t = pres2020_by_state().sum()
+    pres = t["DEMOCRAT"] / (t["DEMOCRAT"] + t["REPUBLICAN"])
+    h = pd.read_csv(HOUSE, low_memory=False)
+    h = h[(h.year == 2024) & (h.stage == "GEN") & (~h.special) & (h.state_po != "DC")]
+    party = h.party.fillna("").str.upper()
+    hd = h[party.str.contains("DEMOCRAT")].candidatevotes.sum()
+    hr = h[party.str.contains("REPUBLICAN")].candidatevotes.sum()
+    hs = hd / (hd + hr)
+    return float(hs - pres), float(pres), float(hs)
+
+
+def shifted_seats(shift: float, plan: str) -> tuple[int, int]:
+    """435-seat D/R totals for `plan` (falls back to enacted where missing) after uniform shift."""
+    d = r = 0
+    for fips, (abbr, k) in data.SEATS.items():
+        proj = json.loads((NAT / abbr / "projection.json").read_text())
+        sh = np.array((proj.get(plan) or proj["enacted"])["district_dem_share"]) + shift
+        d += int((sh > 0.5).sum()); r += int((sh <= 0.5).sum())
+    p = pres2020_by_state()
+    for st in AT_LARGE_ALL:
+        share = p.loc[st, "DEMOCRAT"] / (p.loc[st, "DEMOCRAT"] + p.loc[st, "REPUBLICAN"]) + shift
+        d += int(share > 0.5); r += int(share <= 0.5)
+    return d, r
+
+
 # ---- shapes ----
 def enacted_land(abbr: str) -> gpd.GeoDataFrame:
     """Land-only enacted districts with CD number, cached per state."""
@@ -123,6 +161,8 @@ def at_large_shapes() -> gpd.GeoDataFrame:
 
 def main():
     house = house_2024()
+    shift, pres, hs = national_shift()
+    print(f"uniform shift {shift:+.4f} (2020 pres D {pres:.4f} -> 2024 House D {hs:.4f})")
     left, right, hatched = [], [], []
     for fips, (abbr, k) in sorted(data.SEATS.items(), key=lambda x: x[1][0]):
         if abbr == "HI":
@@ -142,10 +182,10 @@ def main():
         f = NAT / abbr / "metis_districts_land.geojson"
         if f.exists() and "metis" in proj:
             g = gpd.read_file(f).to_crs(EQUAL_AREA_CRS)
-            share = np.array(proj["metis"]["district_dem_share"])[g["district"].to_numpy() - 1]
+            share = np.array(proj["metis"]["district_dem_share"])[g["district"].to_numpy() - 1] + shift
         else:  # no min-border plan (LA): show enacted districts, hatched
             g = en[["geometry"]].copy()
-            share = np.array(proj["enacted"]["district_dem_share"])
+            share = np.array(proj["enacted"]["district_dem_share"]) + shift
             hatched.append(abbr)
         g["winner"] = np.where(share > 0.5, "D", "R")
         g["margin"] = np.abs(2 * share - 1)
@@ -155,22 +195,25 @@ def main():
         print(abbr, flush=True)
     al = at_large_shapes().to_crs(EQUAL_AREA_CRS)
     for _, r in al.iterrows():
-        left.append(gpd.GeoDataFrame([{"geometry": r.geometry, "winner": "D" if r.proj_share > 0.5 else "R",
-                                       "margin": abs(2 * r.proj_share - 1), "state": r.state}], crs=al.crs))
+        ps = r.proj_share + shift
+        left.append(gpd.GeoDataFrame([{"geometry": r.geometry, "winner": "D" if ps > 0.5 else "R",
+                                       "margin": abs(2 * ps - 1), "state": r.state}], crs=al.crs))
         hr = house[house.state_po == r.state].iloc[0]
         right.append(gpd.GeoDataFrame([{"geometry": r.geometry, "winner": hr.winner, "margin": hr.margin,
                                         "state": r.state}], crs=al.crs))
     L = pd.concat(left, ignore_index=True)
     R = pd.concat(right, ignore_index=True)
 
+    house_d = int((house.winner == "D").sum())
+    house_r = int((house.winner == "R").sum())
     hue = {"D": "Blue", "R": "Red", "O": "Gray"}
     for df in (L, R):
         df["color"] = [margin_color(m, hue[w]) for w, m in zip(df.winner, df.margin)]
 
     # Seat totals (all 435 incl. AK, HI).
-    proj_line = [l for l in (NAT / "projection_summary.txt").read_text().splitlines() if l.startswith("metis")][0]
-    house_d = int((house.winner == "D").sum())
-    house_r = int((house.winner == "R").sum())
+    d_l, r_l = shifted_seats(shift, "metis")
+    d_e, r_e = shifted_seats(shift, "enacted")
+    print(f"shifted seats: min-border {d_l}D-{r_l}R; enacted districts {d_e}D-{r_e}R; actual 2024 {house_d}D-{house_r}R")
 
     W, H, DPI = 1920, 1080, 100
     fig = plt.figure(figsize=(W / DPI, H / DPI))
@@ -187,9 +230,8 @@ def main():
         ax.set_aspect("equal")
     for abbr in hatched:
         L[L.state == abbr].plot(ax=axl, facecolor="none", edgecolor="#444444", hatch="////", linewidth=0)
-    d_l, r_l = proj_line.split()[1].rstrip("D"), proj_line.split()[3].rstrip("R")
-    axl.set_title(f"Min-border districts — projected from 2020 presidential vote\n{d_l} D · {r_l} R",
-                  fontsize=15, pad=6)
+    axl.set_title(f"Min-border districts — 2020 presidential vote shifted {shift * 100:+.1f} pts to 2024 House PV\n"
+                  f"{d_l} D · {r_l} R   (enacted districts, same votes: {d_e} D · {r_e} R)", fontsize=14, pad=6)
     axr.set_title(f"Enacted districts (119th Congress) — actual 2024 House results\n{house_d} D · {house_r} R",
                   fontsize=15, pad=6)
     fig.suptitle("U.S. House: border-minimizing map vs reality", fontsize=20, y=0.93)
@@ -206,8 +248,8 @@ def main():
         lax.text(0.17, y + 0.3, party, ha="right", va="center", fontsize=11)
     for m, lbl in ((0.0, "tilt"), (0.05, "lean 5%"), (0.10, "likely 10%"), (0.20, "solid 20%+")):
         lax.text(0.18 + m / 0.3 * 0.8, -0.05, lbl, ha="center", va="top", fontsize=10)
-    notes = ("Margin = winner minus runner-up. Left: 2020 two-party presidential margin per district "
-             "(not a forecast; ignores candidates/incumbency). Right: MEDSL 2024 House returns; uncontested = solid. "
+    notes = (f"Margin = winner minus runner-up. Left: 2020 two-party presidential share per district, uniformly shifted "
+             f"{shift * 100:+.2f} pts so the national two-party vote matches the 2024 House ({hs:.1%} D); ignores candidates/incumbency. Right: MEDSL 2024 House returns; uncontested = solid. "
              f"AK, HI not shown (counted in totals). Hatched: {', '.join(hatched)} has no min-border plan — enacted districts shown.")
     fig.text(0.5, 0.02, notes, ha="center", va="bottom", fontsize=9.5, color="#444444", wrap=True)
     out = NAT / "national_lean_vs_2024.png"

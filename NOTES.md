@@ -141,3 +141,8 @@ segment arrays for all vertices). HI: no valid plan. summary() crashed on HI (fi
 - national_lean.py -> output/national/national_lean_vs_2024.png (1920x1080): left min-border projected
   (228D-207R), right enacted + actual 2024 House (MEDSL via projects/aed/raw, 215D-220R excl. DC),
   aed 4-stop margin colors.
+- Uniform swing to 2024 House PV: 2020 pres D 52.27% -> House 2024 D 48.65% (shift -3.62 pts).
+  Shifted seats: min-border 196D-239R; enacted districts 202D-233R; actual 2024 215D-220R.
+  => at an R-leaning environment compact maps favour R by ~6 seats (matches swing curve crossing
+  near -1 pt). Enacted+shifted pres underestimates actual D by 13 (incumbency, ticket splitting,
+  2020->2024 shifts not uniform).
