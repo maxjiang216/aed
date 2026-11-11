@@ -96,3 +96,16 @@ segment arrays for all vertices). HI: no valid plan. summary() crashed on HI (fi
    UP joined only across Mackinac). IA: 1424 -> 1415 km (layout, not jagged edges, is the cost).
 - New `--target-pct` (user: 0.1% of ideal district pop).
 | national-v2 | `python -m districting.national run --seeds 8 --workers 4 --target-pct 0.001` | CA/TX finish? spreads <= target? FL vs enacted; seeds rejected count; polished-enacted vs enacted |
+| project-v1 | `python -m districting.project output/national` | VEST 2020 pres -> blocks; seats enacted vs metis vs polished; output/national/{projection_summary.txt,projection_by_state.csv,swing_curve.png} |
+| project-v2 | rerun of project-v1 (v1: VEST downloads 403 via urllib; now curl) | national seats enacted vs metis |
+| project-v3 | rerun (v2: Dataverse file-list call still urllib -> 403; now curl) | national seats |
+
+### Projection results (project-v3, 2020 presidential two-party, VEST -> blocks by pop)
+- National: enacted 224D-211R; min-border (metis) 228D-207R; polished-enacted 224D-211R (identical
+  to enacted in every state — local polish never flips a seat). LA, HI: no metis plan -> enacted used.
+- 24 states change; gross 34 seats move, net only +4 D. R-drawn maps lose R seats (TX +5D, FL +3D,
+  OH/NC/WI/TN/SC/UT/MO/OK/GA +1D); D-drawn lose D seats (IL -3, NM/NV/OR/NJ -1).
+- VRA caveat: AL -2D, MS -1D — min-border drops the court-ordered Black-opportunity districts.
+  AZ -2D (commission map), MN/MI/PA -1D.
+- Swing curve: both maps cross 218 at about -1 pt; at +5 pt D swing metis 284 vs enacted 263
+  (enacted maps damp D wave gains); at -5 pt 188 vs 191.

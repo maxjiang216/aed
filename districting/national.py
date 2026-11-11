@@ -83,7 +83,7 @@ def summary() -> None:
         print(df.to_string(index=False))
     ok = df[df.get("border_km").notna()] if "border_km" in df else df.iloc[:0]
     if len(ok):
-        print(f"\nstates: {len(ok)}/{len(df)}; spread<=1: {(ok.spread <= 1).sum()}; "
+        print(f"\nstates: {len(ok)}/{len(df)}; spread<=target: {(ok.spread <= ok.target.fillna(1)).sum()}; "
               f"total border {ok.border_km.sum():,.0f} km vs enacted {ok.enacted_border_km.sum():,.0f} km "
               f"({ok.border_km.sum()/ok.enacted_border_km.sum():.0%}); "
               f"total time {ok.seconds.sum()/60:.1f} min")
