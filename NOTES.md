@@ -161,3 +161,14 @@ MEDSL House 1976-2024 (same-lines pairs, D-vs-R contested both years).
   switching-like plus D drop-off.
 - Seats at 2024 House PV (equal-weight fit): uniform min-border 195D vs enacted 199D; flip 194 vs 199;
   logit 191 vs 194 -> gap 3-5 seats R-favouring, robust to model.
+
+### Citizen apportionment (citizen_apportion.py -> output/citizen/)
+Counterfactual: House/EC apportioned by citizens. Citizen app pop = 2020 resident pop x ACS 2016-20
+citizen share (CVAP special tab State.csv, CIT_EST/TOT_EST) + overseas count (assumed citizens).
+Huntington-Hill baseline reproduces official 2020 apportionment exactly.
+- 5 seats move: CA -4 (cit share .875), TX -1 (.897); MI, PA, OH, ID, WV +1.
+- EC (2020-census base both): R gains +4 in 2016/2024, +2 in 2000/04/20, +1 in 2008/12. No winner flips.
+- Margins thin: citizen seat 435 FL 714,766 vs next CA 713,905; TX/NY/MO/VA all within ~1%.
+- Caveats: ACS undercounts noncitizens (understates shift); a census citizenship question would also
+  depress response in high-immigrant areas — extra loss
+  for CA/TX/NY/FL/NJ not modelled. 2000-2020 elections actually used older apportionments.
