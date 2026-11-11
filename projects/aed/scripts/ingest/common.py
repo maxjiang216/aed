@@ -8,6 +8,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RAW = REPO_ROOT / "raw"
+# The website lives at the hub repo root; this project is projects/aed/.
+WEB_DATA = REPO_ROOT.parents[1] / "public" / "data"
 
 STATES = {
     "Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR", "California": "CA",

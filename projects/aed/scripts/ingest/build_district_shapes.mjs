@@ -27,7 +27,7 @@ import { feature, mergeArcs } from "topojson-client";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const RAW = join(ROOT, "raw", "districts");
 const WORK = join(RAW, "x");
-const OUT = join(ROOT, "public", "data", "house", "shapes");
+const OUT = join(ROOT, "..", "..", "public", "data", "house", "shapes"); // hub repo root
 // Share of vertices kept (weighted Visvalingam). Percentage, not a fixed distance, so
 // Manhattan-sized districts keep their shape while rural ones get coarse.
 const KEEP = process.env.SIMPLIFY_PCT ?? "2%";

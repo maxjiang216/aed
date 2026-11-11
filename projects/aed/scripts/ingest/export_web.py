@@ -25,9 +25,9 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import RAW, REPO_ROOT  # noqa: E402
+from common import RAW, REPO_ROOT, WEB_DATA  # noqa: E402
 
-OUT = REPO_ROOT / "public" / "data"
+OUT = WEB_DATA
 KEEP = 6  # named candidates kept per race; the rest fold into one "Others" row
 CLASS_BY_MOD6 = {0: "III", 2: "I", 4: "II"}  # regular Senate elections: year % 6
 
@@ -179,7 +179,7 @@ def main() -> None:
                                         "Returns, Harvard Dataverse doi:10.7910/DVN/VOQCHQ")
     (OUT / "index.json").write_text(json.dumps(index, separators=(",", ":")), encoding="utf-8")
     for p in sorted(OUT.rglob("*.json")):
-        print(f"{p.relative_to(REPO_ROOT)}  {p.stat().st_size // 1024} KB")
+        print(f"{p.relative_to(WEB_DATA.parents[1])}  {p.stat().st_size // 1024} KB")
 
 
 if __name__ == "__main__":

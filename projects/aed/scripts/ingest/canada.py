@@ -20,7 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "raw" / "canada"
-OUT = ROOT / "public" / "data" / "canada"
+OUT = ROOT.parents[1] / "public" / "data" / "canada"
 
 URLS = {
     2015: "https://www.elections.ca/res/rep/off/ovr2015app/41/data_donnees/table_tableau12.csv",

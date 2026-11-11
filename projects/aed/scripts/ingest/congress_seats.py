@@ -42,7 +42,7 @@ from common import STATES as STATE_ABBR
 WIKI_UNTIL = 101  # congress-legislators records exits itself from about here on
 ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "raw" / "congress"
-OUT = ROOT / "public" / "data" / "congress" / "seats.json"
+OUT = ROOT.parents[1] / "public" / "data" / "congress" / "seats.json"
 BASE = "https://unitedstates.github.io/congress-legislators/"
 FILES = ["legislators-historical.json", "legislators-current.json"]
 
