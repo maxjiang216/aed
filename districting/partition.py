@@ -255,12 +255,14 @@ class Refiner:
 
 def refine(g: BlockGraph, assign: np.ndarray, k: int, target: int = 1, polish_rounds: int = 3,
            backend: str = "cpp", verbose: bool = True,
-           batch_balance: bool = False) -> np.ndarray:
+           batch_balance: bool = False, votes: tuple | None = None) -> np.ndarray:
+    """votes = (w, s, lam): add lam * within-district vote-weighted SS of share s to the objective."""
     if backend == "cpp":
         from . import _refine
         return np.asarray(_refine.refine(g.xadj, g.adjncy, g.length, g.pop, assign, k,
                                          target=target, rounds=polish_rounds, verbose=verbose,
-                                         batch_balance=batch_balance))
+                                         batch_balance=batch_balance,
+                                         **(dict(w=votes[0], s=votes[1], lam=votes[2]) if votes else {})))
     r = Refiner(g, assign, k)
     print(f"  start: spread={r.spread()} cut={r.cut_length()/1000:.1f} km")
     r.polish(spread_cap=max(target, r.spread()))

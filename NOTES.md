@@ -109,3 +109,27 @@ segment arrays for all vertices). HI: no valid plan. summary() crashed on HI (fi
   AZ -2D (commission map), MN/MI/PA -1D.
 - Swing curve: both maps cross 218 at about -1 pt; at +5 pt D swing metis 284 vs enacted 263
   (enacted maps damp D wave gains); at -5 pt 188 vs 191.
+| vote-sweep-1 | `python -m districting.vote_sweep --states IA,WI,NC --alphas 0,2,5,10,20` | output/vote_sweep/{sweep.csv,sweep.png}: border cost vs within-district spread, competitive seats, D seats |
+
+### vote-sweep-1 (edge weight = length*(1-|Δshare|)^alpha), IA/WI/NC, 8 seeds, 0.1% target
+- Weak effect. Within-district spread: WI 0.143 -> 0.123–0.126 (alpha 10–20), NC 0.176 -> 0.171–0.181
+  (no change), IA noise. Border cost +5–30% (NC 2326 -> 3032 km at alpha 20).
+- Seats jump around seed-to-seed (IA 0–2 D, NC 5–7 D) — differences mostly noise at 8 seeds.
+- Why: adjacent precincts usually vote alike (small Δ), so weights barely change except at sharp
+  urban/rural edges; and the edge proxy only rewards following boundaries, not grouping like areas.
+- Next: direct objective = border + λ * within-district vote variance (sufficient stats per district,
+  O(deg) move delta) in C++ refine.
+| homog-sweep-1 | `python -m districting.vote_sweep --param homog-rho --alphas 0,0.25,0.5,0.75,0.9,0.97 --states IA,WI,NC --out-root output/homog_sweep` | J=(1-rho)border/B0+rho*W/T; R² vs border tradeoff, seats, competitive |
+
+### homog-sweep-1 results (J=(1-rho)border/B0 + rho*W/T, R² = 1 - W/T)
+| state | rho=0 | 0.25 | 0.5 | 0.75 | 0.9 | 0.97 | enacted |
+|---|---|---|---|---|---|---|---|
+| IA R² / km | .10/980 | .23/1020 | .23/1019 | .33/1241 | .33/1221 | .33/1300 | — |
+| WI R² / km | .37/1598 | .37/1596 | .37/1595 | .44/1759 | .45/1784 | .46/1888 | .58/2424 |
+| NC R² / km | .29/2326 | .29/2329 | .29/2323 | .29/2318 | .34/2777 | .36/2995 | .34/3618 |
+- R² is step-like in rho (layout flips, flat in between): local search stuck on METIS layout.
+- WI enacted sorts more (R² .58) than any of ours; NC ours at rho .97 beats enacted sorting with
+  shorter border. Sorting packs D: WI 3D->2D at rho>=.75; NC 5D->6D (packs R too).
+- compare_maps.py: 1920x1080 images (user's laptop), grid chosen per state aspect,
+  compare_<ST>_{precinct,districts}.png in output/homog_sweep/.
+- Next idea: put votes into the initial partition (coarse graph weights / multi-constraint METIS).

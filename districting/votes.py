@@ -109,3 +109,37 @@ def block_votes(fips: str, abbr: str, blocks: gpd.GeoDataFrame) -> pd.DataFrame:
     CACHE.mkdir(parents=True, exist_ok=True)
     out.to_parquet(cache)
     return out
+
+
+def block_share(g, v: pd.DataFrame, passes: int = 5) -> np.ndarray:
+    """Two-party Democratic share per block; blocks without votes take their
+    neighbours' mean (a few passes), then the statewide share."""
+    dem, rep = v["dem"].to_numpy(), v["rep"].to_numpy()
+    tot = dem + rep
+    share = np.where(tot > 1e-9, dem / np.maximum(tot, 1e-9), np.nan)
+    src = np.repeat(np.arange(g.n), np.diff(g.xadj))
+    for _ in range(passes):
+        miss = np.isnan(share)
+        if not miss.any():
+            break
+        nb = share[g.adjncy]
+        ok = ~np.isnan(nb)
+        s = np.bincount(src[ok], weights=nb[ok], minlength=g.n)
+        c = np.bincount(src[ok], minlength=g.n)
+        fill = miss & (c > 0)
+        share[fill] = s[fill] / c[fill]
+    share[np.isnan(share)] = dem.sum() / max(tot.sum(), 1e-9)
+    return share
+
+
+def similarity_graph(g, share: np.ndarray, alpha: float):
+    """Same graph, edge weight = border length * (1 - |share_u - share_v|)^alpha.
+
+    alpha = 0 is plain min-border. Larger alpha makes cutting between areas that
+    vote differently cheap, so districts follow partisan boundaries."""
+    from .graph import BlockGraph
+    if alpha == 0:
+        return g
+    src = np.repeat(np.arange(g.n), np.diff(g.xadj))
+    factor = np.clip(1.0 - np.abs(share[src] - share[g.adjncy]), 1e-3, 1.0) ** alpha
+    return BlockGraph(g.xadj, g.adjncy, g.length * factor, g.pop, g.exterior, g.n_virtual)

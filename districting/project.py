@@ -31,7 +31,7 @@ def plan_votes(assign: np.ndarray, v: pd.DataFrame, k: int) -> tuple[np.ndarray,
     return dem, rep
 
 
-def plan_stats(dem: np.ndarray, rep: np.ndarray) -> dict:
+def plan_stats(dem: np.ndarray, rep: np.ndarray, assign=None, v=None) -> dict:
     share = dem / (dem + rep)
     tot = dem + rep
     need = np.floor(tot / 2) + 1
@@ -46,9 +46,38 @@ def plan_stats(dem: np.ndarray, rep: np.ndarray) -> dict:
         "statewide_dem": round(float(statewide), 4),
         "efficiency_gap": round(float(eg), 4),
         "mean_median": round(float(np.mean(share) - np.median(share)), 4),
+        "competitive_seats": int((np.abs(share - 0.5) < 0.05).sum()),
+        "mean_margin": round(float(np.mean(np.abs(share - 0.5)) * 2), 4),  # avg two-party margin
+        "within_district_spread": _within_spread(assign, v, share) if assign is not None else None,
+        "r2_between": _r2(assign, v) if assign is not None else None,
         "district_dem_share": np.round(share, 4).tolist(),
         "swing_dem_seats": [int(((share + s) > 0.5).sum()) for s in SWINGS],
     }
+
+
+def _within_spread(assign, v, dshare) -> float:
+    """Vote-weighted std of block two-party share around its district's share,
+    averaged over the state: low = politically uniform districts."""
+    dem, rep = v["dem"].to_numpy(), v["rep"].to_numpy()
+    tot = dem + rep
+    ok = (assign >= 0) & (tot > 0)
+    s = dem[ok] / tot[ok]
+    dev2 = (s - dshare[assign[ok]]) ** 2
+    return round(float(np.sqrt(np.sum(tot[ok] * dev2) / tot[ok].sum())), 4)
+
+
+def _r2(assign, v) -> float:
+    """Share of voter-level partisan variance that lies between districts: B / T."""
+    dem, rep = v["dem"].to_numpy(), v["rep"].to_numpy()
+    w = dem + rep
+    ok = (assign >= 0) & (w > 0)
+    s, w, a = dem[ok] / w[ok], w[ok], assign[ok]
+    T = np.sum(w * (s - np.sum(w * s) / w.sum()) ** 2)
+    W = np.bincount(a, weights=w)
+    S = np.bincount(a, weights=w * s)
+    Q = np.bincount(a, weights=w * s * s)
+    within = np.sum(Q - S * S / np.maximum(W, 1e-12))
+    return round(float(1 - within / T), 4)
 
 
 def plan_assignments(state_dir: Path, blocks) -> dict[str, np.ndarray]:
@@ -72,7 +101,7 @@ def project_state(state_dir: Path) -> dict:
     v = votes.block_votes(fips, abbr, blocks)
     out = {}
     for name, a in plan_assignments(state_dir, blocks).items():
-        out[name] = plan_stats(*plan_votes(a, v, k))
+        out[name] = plan_stats(*plan_votes(a, v, k), a, v)
     (state_dir / "projection.json").write_text(json.dumps(out, indent=1))
     return out
 
@@ -90,7 +119,8 @@ def national(root: Path) -> pd.DataFrame:
         _, _, k = data.resolve_state(d.name)
         for plan, s in res.items():
             rows.append({"state": d.name, "seats": k, "plan": plan, **{x: s[x] for x in
-                         ("dem_seats", "rep_seats", "statewide_dem", "efficiency_gap", "mean_median")}})
+                         ("dem_seats", "rep_seats", "statewide_dem", "efficiency_gap", "mean_median",
+                          "competitive_seats", "mean_margin", "within_district_spread", "r2_between")}})
         e = res.get("enacted", {})
         print(f"{d.name}: " + "  ".join(f"{p} {s['dem_seats']}D-{s['rep_seats']}R" for p, s in res.items())
               + f"  (Biden {e.get('statewide_dem', float('nan')):.1%})", flush=True)

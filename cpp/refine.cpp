@@ -121,6 +121,35 @@ public:
 
     int chains() const { return chains_; }
 
+    // ---- homogeneity term: lam * sum_d sum_{i in d} w_i (s_i - mean_d)^2 ----
+    // w = votes, s = two-party share. Per-district sufficient stats W, S, Q make the
+    // change from moving one block O(1). lam = 0 disables it (pure border length).
+    void set_votes(py::array_t<double, py::array::c_style | py::array::forcecast> w,
+                   py::array_t<double, py::array::c_style | py::array::forcecast> s, double lam) {
+        w_.assign(w.data(), w.data() + w.size());
+        s_.assign(s.data(), s.data() + s.size());
+        lam_ = lam;
+        W_.assign(k_, 0.0); S_.assign(k_, 0.0); Q_.assign(k_, 0.0);
+        for (int v = 0; v < n_; ++v) {
+            const int d = assign_[v];
+            W_[d] += w_[v]; S_[d] += w_[v] * s_[v]; Q_[d] += w_[v] * s_[v] * s_[v];
+        }
+    }
+    static double ss(double W, double S, double Q) { return W > 1e-12 ? std::max(0.0, Q - S * S / W) : 0.0; }
+    double within_ss() const {
+        double t = 0;
+        for (int d = 0; d < static_cast<int>(W_.size()); ++d) t += ss(W_[d], S_[d], Q_[d]);
+        return t;
+    }
+    double dss(int v, int a, int b) const {
+        if (lam_ == 0 || w_.empty() || w_[v] == 0) return 0.0;
+        const double wv = w_[v], sv = s_[v], q = wv * sv * sv;
+        const double before = ss(W_[a], S_[a], Q_[a]) + ss(W_[b], S_[b], Q_[b]);
+        const double after = ss(W_[a] - wv, S_[a] - wv * sv, Q_[a] - q) + ss(W_[b] + wv, S_[b] + wv * sv, Q_[b] + q);
+        return after - before;
+    }
+    double objective() const { return cut_length() + lam_ * within_ss(); }
+
     // Pair swap between adjacent districts S (heavier) and D: move v (S->D) and
     // u (D->S). Net transfer delta = pop[v] - pop[u] improves sum of squares iff
     // 0 < delta < dpop[S] - dpop[D]. Best gain first, ties by added border.
@@ -220,6 +249,11 @@ public:
 
     void move(int v, int b) {
         int a = assign_[v];
+        if (!w_.empty()) {
+            const double wv = w_[v], sv = s_[v];
+            W_[a] -= wv; S_[a] -= wv * sv; Q_[a] -= wv * sv * sv;
+            W_[b] += wv; S_[b] += wv * sv; Q_[b] += wv * sv * sv;
+        }
         assign_[v] = b;
         dpop_[a] -= pop_[v];
         dpop_[b] += pop_[v];
@@ -287,6 +321,8 @@ public:
     }
 
 private:
+    std::vector<double> w_, s_, W_, S_, Q_;
+    double lam_ = 0.0;
     int chains_ = 0, swaps_ = 0;
     std::vector<std::vector<std::pair<int, double>>> buckets_;
     std::vector<std::pair<int, int>> undo_;
@@ -429,7 +465,7 @@ private:
             const double la = acc_seen_[a] == acc_stamp_ ? acc_[a] : 0.0;
             for (int b : touched_) {
                 if (b == a) continue;
-                const double dcut = la - acc_[b];
+                const double dcut = la - acc_[b] + lam_ * dss(v, a, b);  // total objective change
                 double score;
                 if (polish) {
                     if (dcut >= -1e-6) continue;
@@ -459,6 +495,12 @@ private:
             if (dirty_[c.v] == pass_stamp_) continue;
             const int a = assign_[c.v];
             const i64 p = pop_[c.v];
+            if (polish && lam_ != 0) {
+                neighbor_lengths(c.v);
+                const double la = acc_seen_[a] == acc_stamp_ ? acc_[a] : 0.0;
+                const double lb = acc_seen_[c.b] == acc_stamp_ ? acc_[c.b] : 0.0;
+                if (la - lb + lam_ * dss(c.v, a, c.b) >= -1e-6) continue;
+            }
             if (polish) {
                 i64 hi = std::numeric_limits<i64>::min(), lo = std::numeric_limits<i64>::max();
                 for (int d = 0; d < k_; ++d) {
@@ -487,9 +529,13 @@ py::array_t<i64> refine(py::array_t<i64, py::array::c_style | py::array::forceca
                         py::array_t<double, py::array::c_style | py::array::forcecast> length,
                         py::array_t<i64, py::array::c_style | py::array::forcecast> pop,
                         py::array_t<i64, py::array::c_style | py::array::forcecast> assign, int k,
-                        i64 target, int rounds, bool verbose, bool batch_balance) {
+                        i64 target, int rounds, bool verbose, bool batch_balance,
+                        py::object w, py::object s, double lam) {
     Refiner r(xadj, adjncy, length, pop, assign, k);
     r.batch_balance_ = batch_balance;
+    if (!w.is_none() && lam != 0)
+        r.set_votes(w.cast<py::array_t<double, py::array::c_style | py::array::forcecast>>(),
+                    s.cast<py::array_t<double, py::array::c_style | py::array::forcecast>>(), lam);
     if (verbose) py::print("  start: spread =", r.spread(), "cut_km =", r.cut_length() / 1000);
     const int max_iter = 10'000'000;
     i64 cap = std::max(target, r.spread());
@@ -502,10 +548,10 @@ py::array_t<i64> refine(py::array_t<i64, py::array::c_style | py::array::forceca
         if (verbose) py::print("  cap", cap, "spread", r.spread(), "cut_km", r.cut_length() / 1000);
     }
     for (int i = 0; i < rounds; ++i) {
-        double before = r.cut_length();
+        double before = r.objective();
         r.balance(target, max_iter, verbose);
         r.polish(std::max(target, r.spread()), max_iter, verbose);
-        if (r.spread() <= target && std::abs(before - r.cut_length()) < 1) break;
+        if (r.spread() <= target && std::abs(before - r.objective()) < 1) break;
     }
     return r.assignment();
 }
@@ -531,8 +577,12 @@ PYBIND11_MODULE(_refine, m) {
         .def("removable", &Refiner::removable)
         .def("chains", &Refiner::chains)
         .def("swaps", &Refiner::swaps)
+        .def("set_votes", &Refiner::set_votes)
+        .def("within_ss", &Refiner::within_ss)
+        .def("objective", &Refiner::objective)
         .def("move", &Refiner::move);
     m.def("refine", &refine, py::arg("xadj"), py::arg("adjncy"), py::arg("length"), py::arg("pop"),
           py::arg("assign"), py::arg("k"), py::arg("target") = 1, py::arg("rounds") = 3,
-          py::arg("verbose") = true, py::arg("batch_balance") = false);
+          py::arg("verbose") = true, py::arg("batch_balance") = false,
+          py::arg("w") = py::none(), py::arg("s") = py::none(), py::arg("lam") = 0.0);
 }
