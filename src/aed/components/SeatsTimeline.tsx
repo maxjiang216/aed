@@ -164,7 +164,7 @@ export function SeatsTimeline() {
   return (
     <div className="app seats">
       <header className="top">
-        <p className="crumb"><a href="#/">← Election maps</a></p>
+        <p className="crumb"><a href="#/president">← Election maps</a></p>
         <h1>Who holds the {name}</h1>
         <p className="lede">
           Seats held by each party, day by day — including vacancies from deaths, resignations and

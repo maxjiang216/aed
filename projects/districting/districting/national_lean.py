@@ -3,7 +3,7 @@
   right - enacted 119th districts, actual 2024 House winner/margin (MEDSL)
 
 Colors: four stops per party (tilt, lean, likely, solid) reached at margins
-5% / 10% / 20%, linearly interpolated -- same scale as projects/aed (src/colors.ts).
+5% / 10% / 20%, linearly interpolated -- same scale as the site (src/colors.ts).
 
     python -m districting.national_lean
 """
@@ -28,7 +28,7 @@ from .graph import EQUAL_AREA_CRS
 
 ROOT = Path(__file__).resolve().parent.parent
 NAT = ROOT / "output" / "national"
-HOUSE_SRC = Path.home() / "projects" / "aed" / "raw" / "medsl_house_1976_2024.csv"
+HOUSE_SRC = Path(__file__).resolve().parents[2] / "aed" / "raw" / "medsl_house_1976_2024.csv"
 HOUSE = ROOT / "data" / "raw" / "house" / "medsl_house_1976_2024.csv"
 
 # ---- aed margin colors (src/colors.ts) ----
@@ -90,7 +90,7 @@ def house_2024() -> pd.DataFrame:
 
 
 # ---- uniform swing: 2020 presidential -> 2024 House popular vote ----
-PRES_SRC = Path.home() / "projects" / "aed" / "MIT" / "countypres_2000-2020.csv"
+PRES_SRC = Path(__file__).resolve().parents[2] / "aed" / "MIT" / "countypres_2000-2020.csv"
 AT_LARGE_ALL = ["AK", "DE", "ND", "SD", "VT", "WY"]
 
 

@@ -9,3 +9,8 @@ $(TARGET): cpp/refine.cpp
 .PHONY: clean
 clean:
 	rm -f districting/_refine*.so
+
+# Website data -> <repo>/public/districting/ (needs output/national + output/citizen; uses mapshaper from the root node_modules).
+.PHONY: web
+web:
+	node web/export.mjs

@@ -25,7 +25,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / "data" / "raw" / "citizen"
-AED = Path.home() / "projects" / "aed"
+AED = Path(__file__).resolve().parents[2] / "aed"  # sibling project in the hub repo
 OUT = ROOT / "output" / "citizen"
 
 ABBR = {

@@ -1,3 +1,4 @@
+import { REPO_URL } from "../projects";
 import { useEffect, useMemo, useState } from "react";
 import { Controls } from "./components/Controls";
 import { Legend } from "./components/Legend";
@@ -222,7 +223,7 @@ export default function App() {
       <footer className="foot">
         Sources: MIT Election Data + Science Lab; Algara &amp; Amlani (Harvard Dataverse); Wikipedia results-by-state
         tables (CC BY-SA); district maps from Lewis et al. (UCLA) and the U.S. Census Bureau. Map: us-atlas.{" "}
-        <a href="https://github.com/maxjiang216/aed">Code and data on GitHub</a>.
+        <a href={REPO_URL}>Code and data on GitHub</a>.
       </footer>
     </div>
   );

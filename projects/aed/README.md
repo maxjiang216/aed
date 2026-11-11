@@ -1,5 +1,9 @@
 # American Elections Database
 
+Part of the [Election Lab](../../README.md) hub: the website lives at the repo root (`src/aed/`), this
+folder holds the data pipeline. Run the `make`/python commands below from `projects/aed/`; they write
+into the root `public/data/`.
+
 Interactive maps of U.S. presidential, Senate and governor results by state since 1828
 (president by county since 2000) and House results by congressional district since 1976. Live at https://aed-ruby.vercel.app/.
 
@@ -7,7 +11,7 @@ Margin is always **(1st − 2nd) ÷ all votes cast**, so third-party votes shrin
 four stops per party (tilt, lean at 5%, likely at 10%, solid at 20%) with linear
 interpolation between them.
 
-## Run the site
+## Run the site (from the repo root)
 
 ```bash
 npm install
@@ -21,7 +25,7 @@ drawn with `d3-geo`. The URL hash holds the view, e.g. `#/president/state/1968/r
 
 ## Data
 
-The site only reads the committed JSON in `public/data/`. To rebuild it from the sources:
+The site only reads the committed JSON in the root `public/data/`. To rebuild it from the sources:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r scripts/ingest/requirements.txt
@@ -41,7 +45,7 @@ make data
 
 House district maps: Lewis, DeVine, Pritchett & Martis (UCLA, cdmaps.polisci.ucla.edu) for the
 95th–114th Congress, Census cartographic boundary files for the 115th–119th; built by
-`make shapes` into `public/data/house/shapes/`. States whose districts changed between two
+`make shapes` into the root `public/data/house/shapes/`. States whose districts changed between two
 elections are listed in `meta.json`; the map does not compare flip/shift/trend there.
 
 Algara & Amlani name only the Democratic and Republican candidates; everything else is one
@@ -55,4 +59,4 @@ optionally the 2000–2024 county file (doi:10.7910/DVN/VOQCHQ) as
 `public/data/house/<year>.json` exists.
 
 Pipeline: `fetch_sources.py` (raw files into `raw/`) → `build_statewide.py`
-(`data/statewide.json` + report) → `export_web.py` (`public/data/`).
+(`data/statewide.json` + report) → `export_web.py` (root `public/data/`).

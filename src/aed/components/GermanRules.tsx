@@ -138,7 +138,7 @@ export function GermanRules() {
         <h1>{C.title}</h1>
         <p className="lede">
           What if each election had been counted the way Germany elects its Bundestag?{" "}
-          <a href="#/">← Back to the map</a>
+          <a href="#/president">← Back to the map</a>
         </p>
       </header>
       <nav className="controls">
